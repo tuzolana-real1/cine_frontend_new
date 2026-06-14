@@ -1,0 +1,122 @@
+import { useEffect, useState, useContext } from 'react';
+import { useForm } from 'react-hook-form';
+import { reviewsApi } from '../api/reviews';
+import { Button } from './Button';
+import { NotificationContext } from '../context/NotificationContext';
+
+export const CommentSection = ({ eventId }) => {
+  const [reviews, setReviews] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { addNotification } = useContext(NotificationContext);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      rating: '5',
+      comment: '',
+    },
+  });
+
+  useEffect(() => {
+    const loadReviews = async () => {
+      try {
+        const response = await reviewsApi.getByEventId(eventId);
+        setReviews(response.data || []);
+      } catch (error) {
+        addNotification('Não foi possível carregar avaliações.', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadReviews();
+  }, [eventId, addNotification]);
+
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+    try {
+      const response = await reviewsApi.create(eventId, {
+        rating: Number(data.rating),
+        comment: data.comment,
+      });
+      setReviews((prev) => [response.data, ...prev]);
+      reset({ rating: '5', comment: '' });
+      addNotification('Comentário enviado com sucesso.', 'success');
+    } catch (error) {
+      addNotification('Erro ao enviar comentário.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="rounded-3xl border border-white/10 bg-surface p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Comentários e Avaliações</h2>
+        <span className="text-sm text-muted">{reviews.length} opiniões</span>
+      </div>
+
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid gap-4 sm:grid-cols-[120px_1fr]">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">Avaliação</label>
+            <select
+              className={`h-11 rounded-md border border-white/10 bg-background px-3 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${errors.rating ? 'border-red-500' : ''}`}
+              {...register('rating', {
+                required: 'Selecione uma avaliação.',
+              })}
+            >
+              {[5, 4, 3, 2, 1].map((value) => (
+                <option key={value} value={value}>
+                  {value} estrelas
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">Comentário</label>
+            <textarea
+              className={`min-h-[84px] w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${errors.comment ? 'border-red-500' : ''}`}
+              placeholder="Partilhe a sua opinião sobre o evento"
+              {...register('comment', {
+                required: 'O comentário é obrigatório.',
+                minLength: { value: 10, message: 'Escreva pelo menos 10 caracteres.' },
+              })}
+            />
+            {errors.comment && <span className="text-xs text-red-500">{errors.comment.message}</span>}
+          </div>
+        </div>
+
+        <div className="flex justify-end">
+          <Button type="submit" isLoading={isSubmitting}>
+            Enviar Avaliação
+          </Button>
+        </div>
+      </form>
+
+      <div className="mt-8 space-y-4">
+        {isLoading ? (
+          <div className="rounded-3xl border border-dashed border-white/10 bg-background p-6 text-center text-sm text-muted">Carregando avaliações...</div>
+        ) : reviews.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-white/10 bg-background p-6 text-center text-sm text-muted">Seja o primeiro a avaliar este evento.</div>
+        ) : (
+          reviews.map((review) => (
+            <div key={review.id} className="rounded-3xl border border-white/10 bg-background p-4">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-semibold">{review.user?.name || 'Anônimo'}</span>
+                <span className="text-sm text-primary">{review.rating} estrelas</span>
+              </div>
+              <p className="mt-2 text-sm text-muted">{review.comment}</p>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};

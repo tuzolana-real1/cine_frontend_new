@@ -1,0 +1,92 @@
+import { lazy } from 'react';
+import { createBrowserRouter } from 'react-router-dom';
+import { BaseLayout } from '../layout/BaseLayout';
+import { ProtectedRoute } from '../layout/ProtectedRoute';
+import { StudioRoute } from '../layout/StudioRoute';
+
+// Lazy load pages for performance
+const Home = lazy(() => import('../pages/Home'));
+const Explore = lazy(() => import('../pages/Explore'));
+const Login = lazy(() => import('../pages/Login'));
+const Register = lazy(() => import('../pages/Register'));
+const RegisterStudio = lazy(() => import('../pages/RegisterStudio'));
+const Dashboard = lazy(() => import('../pages/Dashboard'));
+const Profile = lazy(() => import('../pages/Profile'));
+const Notifications = lazy(() => import('../pages/Notifications'));
+const Streaming = lazy(() => import('../pages/Streaming'));
+const NotFound = lazy(() => import('../pages/NotFound'));
+const Publicar = lazy(() => import('../pages/Publicar'));
+const PublicarVideo = lazy(() => import('../pages/PublicarVideo'));
+
+export const router = createBrowserRouter([
+  {
+    element: <BaseLayout />,
+    errorElement: <NotFound />,
+    children: [
+      {
+        path: '/',
+        element: <Home />,
+      },
+      {
+        path: '/explorar',
+        element: <Explore />,
+      },
+      {
+        path: '/entrar',
+        element: <Login />,
+      },
+      {
+        path: '/registar',
+        element: <Register />,
+      },
+      {
+        path: '/registar-estudio',
+        element: <RegisterStudio />,
+      },
+      {
+        path: '/streaming/:eventId',
+        element: <Streaming />,
+      },
+      {
+        // General Protected Routes
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: '/perfil',
+            element: <Profile />,
+          },
+          {
+            path: '/notificacoes',
+            element: <Notifications />,
+          },
+          {
+            path: '/painel',
+            element: <Dashboard />,
+          },
+        ],
+      },
+      {
+        // Studio Only Routes
+        element: <StudioRoute />,
+        children: [
+          {
+            path: '/painel/publicar',
+            element: <Publicar />,
+          },
+          {
+            path: '/painel/publicar/:eventId',
+            element: <Publicar />,
+          },
+          {
+            path: '/painel/publicar-video',
+            element: <PublicarVideo />,
+          },
+        ],
+      },
+      {
+        path: '*',
+        element: <NotFound />,
+      },
+    ],
+  },
+]);
