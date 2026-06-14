@@ -114,11 +114,52 @@ export default function Dashboard() {
           )}
         </section>
       ) : (
-        <EmptyState
-          icon={LayoutDashboard}
-          title="Área do Produtor"
-          description="Somente contas de Estúdio/Produtor podem publicar, editar ou eliminar eventos."
-        />
+        <section className="mb-8">
+          <h2 className="mb-4 text-xl font-semibold">Eventos disponíveis</h2>
+          <p className="mb-6 text-sm text-muted">Veja abaixo os eventos publicados na plataforma. Pode aceder ao streaming sempre que estiver disponível.</p>
+          {loading ? (
+            <div className="text-sm text-muted">A carregar eventos...</div>
+          ) : events.length === 0 ? (
+            <EmptyState
+              icon={LayoutDashboard}
+              title="Nenhum evento disponível"
+              description="Ainda não há eventos publicados. Verifique novamente mais tarde."
+            />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {events.map((ev) => {
+                const id = ev.id || ev._id || ev.eventId;
+                const isAvailable = new Date() >= new Date(ev.date);
+                return (
+                  <div key={id} className="rounded-lg border border-white/5 bg-surface p-4">
+                    <div className="mb-3 flex items-start gap-3">
+                      <div className="h-20 w-32 overflow-hidden rounded-md bg-white/5">
+                        <img
+                          src={ev.posterUrl || ev.poster?.url || `https://via.placeholder.com/320x200?text=${encodeURIComponent(ev.title || 'Sem+imagem')}`}
+                          alt={ev.title}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold">{ev.title}</h3>
+                        <p className="text-sm text-muted">{ev.date ? new Date(ev.date).toLocaleString() : 'Data não definida'}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between text-sm text-white/80">
+                        <span>{ev.category}</span>
+                        <span>{ev.price ? `${ev.price} AKZ` : 'Gratuito'}</span>
+                      </div>
+                      <Link to={`/streaming/${id}`}>
+                        <Button className="w-full">{isAvailable ? 'Assistir' : 'Ver detalhes'}</Button>
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
       )}
     </div>
   );

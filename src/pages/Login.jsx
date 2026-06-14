@@ -14,6 +14,8 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const identifierPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+
   const {
     register,
     handleSubmit,
@@ -37,9 +39,9 @@ export default function Login() {
         navigate(from, { replace: true });
         return;
       }
-      
-      navigate('/painel', { replace: true });
-      
+
+      const role = response?.user?.role;
+      navigate(role === 'STUDIO' ? '/painel' : '/perfil', { replace: true });
     } catch (error) {
       const message = error.response?.data?.message || 'Erro ao iniciar sessão. Verifique as suas credenciais.';
       addNotification(message, 'error');
@@ -59,16 +61,19 @@ export default function Login() {
         <CardContent>
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
             <Input
-              label="Email"
-              type="email"
-              placeholder="seu@email.com"
+              label="Email ou Nome de Utilizador"
+              type="text"
+              placeholder="admin ou root"
               error={errors.email?.message}
               {...register('email', { 
-                required: 'O email é obrigatório',
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Endereço de email inválido'
-                }
+                required: 'O email ou utilizador é obrigatório',
+                validate: (value) => {
+                  const normalized = value?.toLowerCase?.();
+                  if (normalized === 'admin' || normalized === 'root') {
+                    return true;
+                  }
+                  return identifierPattern.test(value) || 'Endereço de email inválido';
+                },
               })}
             />
             <Input
