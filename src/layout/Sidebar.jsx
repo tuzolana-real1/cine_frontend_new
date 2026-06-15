@@ -23,7 +23,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
       )}>
         <div className="flex h-16 items-center justify-between px-4 border-b border-white/10">
           <span className="font-display text-xl font-bold tracking-tight text-white">
-            Angola<span className="text-primary">Cine</span>
+            Cine <span className="text-primary">Teatro</span>
           </span>
           <button onClick={onClose} className="text-muted hover:text-white">
             <X size={24} />

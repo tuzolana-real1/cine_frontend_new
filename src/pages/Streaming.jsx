@@ -89,7 +89,6 @@ export default function Streaming() {
             <CardContent className="space-y-3">
               <p><strong>Data:</strong> {new Date(event.date).toLocaleString('pt-PT')}</p>
               <p><strong>Local:</strong> {event.location}</p>
-              <p><strong>Preço:</strong> {event.price ? `${event.price} AKZ` : 'Gratuito'}</p>
               <p><strong>Categoria:</strong> {event.category}</p>
             </CardContent>
           </Card>

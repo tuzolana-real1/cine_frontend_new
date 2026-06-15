@@ -23,7 +23,6 @@ const defaultValues = {
   description: '',
   date: '',
   location: '',
-  price: '',
   category: '',
 };
 
@@ -58,7 +57,6 @@ export default function Publicar() {
   const watchDescription = watch('description');
   const watchDate = watch('date');
   const watchLocation = watch('location');
-  const watchPrice = watch('price');
   const watchCategory = watch('category');
 
   useEffect(() => {
@@ -115,7 +113,6 @@ export default function Publicar() {
         description: event.description || '',
         date: event.date ? event.date.split('T')[0] : '',
         location: event.location || '',
-        price: event.price ?? '',
         category: event.category || '',
       });
       setPosterFile(null);
@@ -159,7 +156,6 @@ export default function Publicar() {
       formData.append('description', pendingEvent.description);
       formData.append('date', pendingEvent.date);
       formData.append('location', pendingEvent.location);
-      formData.append('price', pendingEvent.price);
       formData.append('category', pendingEvent.category);
       if (posterFile) {
         formData.append('poster', posterFile);
@@ -313,37 +309,22 @@ export default function Publicar() {
                   />
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <Input
-                    label="Preço (AKZ)"
-                    type="number"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    error={errors.price?.message}
-                    {...register('price', {
-                      required: 'O preço é obrigatório.',
-                      min: { value: 0, message: 'O preço não pode ser negativo.' },
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium">Categoria</label>
+                  <select
+                    className={`h-11 rounded-md border border-white/10 bg-surface px-3 text-sm text-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${errors.category ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                    {...register('category', {
+                      required: 'A categoria é obrigatória.',
                     })}
-                  />
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium">Categoria</label>
-                    <select
-                      className={`h-11 rounded-md border border-white/10 bg-surface px-3 text-sm text-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${errors.category ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                      {...register('category', {
-                        required: 'A categoria é obrigatória.',
-                      })}
-                    >
-                      <option value="">Escolha a categoria</option>
-                      {categories.map((category) => (
-                        <option key={category.value} value={category.value}>
-                          {category.label}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.category && <span className="text-xs text-red-500">{errors.category.message}</span>}
-                  </div>
+                  >
+                    <option value="">Escolha a categoria</option>
+                    {categories.map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.category && <span className="text-xs text-red-500">{errors.category.message}</span>}
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -405,7 +386,6 @@ export default function Publicar() {
                 <div className="grid gap-2 text-sm text-muted">
                   <p><strong className="text-text">Data:</strong> {watchDate || 'dd/mm/aaaa'}</p>
                   <p><strong className="text-text">Local:</strong> {watchLocation || 'Endereço do evento'}</p>
-                  <p><strong className="text-text">Preço:</strong> {watchPrice ? `${watchPrice} AKZ` : 'Gratuito / A definir'}</p>
                 </div>
                 <div>
                   <h3 className="text-base font-semibold">Descrição</h3>
@@ -439,10 +419,6 @@ export default function Publicar() {
                 <p className="text-xs uppercase tracking-[0.3em] text-muted">Local</p>
                 <p className="mt-1">{pendingEvent?.location}</p>
               </div>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-muted">Preço</p>
-              <p className="mt-1">{pendingEvent?.price ? `${pendingEvent.price} AKZ` : 'Gratuito / A definir'}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-muted">Sinopse</p>

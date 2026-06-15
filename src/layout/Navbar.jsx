@@ -20,7 +20,7 @@ export const Navbar = ({ onMenuClick }) => {
           <Link to="/" className="flex items-center gap-2 text-primary">
             <Film size={28} />
             <span className="font-display text-xl font-bold tracking-tight text-white hidden sm:block">
-              Angola<span className="text-primary">Cine</span>
+              Cine <span className="text-primary">Teatro</span>
             </span>
           </Link>
           

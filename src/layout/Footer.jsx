@@ -10,7 +10,7 @@ export const Footer = () => {
             <Link to="/" className="flex items-center gap-2 text-primary mb-4">
               <Film size={28} />
               <span className="font-display text-xl font-bold tracking-tight text-white">
-                Angola<span className="text-primary">Cine</span>
+                Cine <span className="text-primary">Teatro</span>
               </span>
             </Link>
             <p className="text-sm text-muted max-w-sm mb-6">
@@ -50,7 +50,7 @@ export const Footer = () => {
         </div>
         
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-muted">
-          <p>&copy; {new Date().getFullYear()} AngolaCine. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} Cine Teatro. Todos os direitos reservados.</p>
           <p className="mt-2 md:mt-0">Feito com ❤️ em Luanda</p>
         </div>
       </div>

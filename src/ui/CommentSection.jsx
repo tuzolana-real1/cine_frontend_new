@@ -40,10 +40,12 @@ export const CommentSection = ({ eventId }) => {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      const response = await reviewsApi.create(eventId, {
+      const reviewData = {
         rating: Number(data.rating),
-        comment: data.comment,
-      });
+        comment: data.comment?.trim() || '',
+      };
+
+      const response = await reviewsApi.create(eventId, reviewData);
       setReviews((prev) => [response.data, ...prev]);
       reset({ rating: '5', comment: '' });
       addNotification('Comentário enviado com sucesso.', 'success');

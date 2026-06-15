@@ -148,7 +148,6 @@ export default function Dashboard() {
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between text-sm text-white/80">
                         <span>{ev.category}</span>
-                        <span>{ev.price ? `${ev.price} AKZ` : 'Gratuito'}</span>
                       </div>
                       <Link to={`/streaming/${id}`}>
                         <Button className="w-full">{isAvailable ? 'Assistir' : 'Ver detalhes'}</Button>

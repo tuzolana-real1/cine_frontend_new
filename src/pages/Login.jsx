@@ -55,7 +55,7 @@ export default function Login() {
     <div className="flex flex-1 items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle>Entrar na AngolaCine</CardTitle>
+          <CardTitle>Entrar no Cine Teatro</CardTitle>
           <p className="text-sm text-muted mt-2">Bem-vindo de volta! Insira os seus dados.</p>
         </CardHeader>
         <CardContent>

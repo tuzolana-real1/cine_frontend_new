@@ -20,7 +20,7 @@ export default function Home() {
             A Magia do Cinema e Teatro Angolano
           </h1>
           <p className="mb-8 max-w-2xl text-lg text-white/80 md:text-xl">
-            Descubra as melhores produções de Luanda. Assista a filmes, reserve bilhetes para peças de teatro e apoie a cultura nacional.
+            Descubra as melhores produções de Luanda. Assista a filmes e espetáculos de teatro e apoie a cultura nacional.
           </p>
           <div className="flex flex-col gap-4 sm:flex-row">
             <Button size="lg" className="gap-2">
@@ -54,11 +54,7 @@ export default function Home() {
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <div className="absolute bottom-0 p-4 translate-y-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 w-full">
-                <Button size="sm" className="w-full gap-2">
-                  <Calendar size={16} /> Comprar Bilhete
-                </Button>
-              </div>
+
             </div>
           ))}
         </div>

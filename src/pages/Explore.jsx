@@ -84,7 +84,6 @@ export default function Explore() {
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between text-sm text-white/80">
                     <span>{event.category}</span>
-                    <span>{event.price ? `${event.price} AKZ` : 'Gratuito'}</span>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <Link to={`/streaming/${id}`} className="flex-1">
