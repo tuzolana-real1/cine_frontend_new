@@ -35,10 +35,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Eventos em destaque */}
+      {/* Conteúdos em destaque */}
       <section className="container mx-auto px-4 py-16">
         <div className="mb-8 flex items-center justify-between">
-          <h2 className="text-2xl font-bold md:text-3xl">Eventos em Destaque</h2>
+          <h2 className="text-2xl font-bold md:text-3xl">Conteúdos em Destaque</h2>
           <Link to="/explorar" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
             Ver todos <ChevronRight size={16} />
           </Link>

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Film, User, Menu, Search, LogOut } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../ui/Button';
+import { USER_TYPE } from '../constants/enums';
 
 export const Navbar = ({ onMenuClick }) => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -27,10 +28,10 @@ export const Navbar = ({ onMenuClick }) => {
           <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-white/70">
             <Link to="/" className="hover:text-white transition-colors">Início</Link>
             <Link to="/explorar" className="hover:text-white transition-colors">Explorar</Link>
-            {isAuthenticated && user?.role === 'STUDIO' && (
+            {isAuthenticated && user?.role === USER_TYPE.STUDIO && (
               <Link to="/painel/publicar" className="hover:text-white transition-colors">Publicar</Link>
             )}
-            {isAuthenticated && user?.role === 'STUDIO' && (
+            {isAuthenticated && user?.role === USER_TYPE.STUDIO && (
               <Link to="/painel/publicar-video" className="hover:text-white transition-colors">Upload</Link>
             )}
           </div>
@@ -43,7 +44,7 @@ export const Navbar = ({ onMenuClick }) => {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-4">
-              <Link to={user?.role === 'STUDIO' ? '/painel' : '/perfil'} className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors">
+              <Link to={user?.role === USER_TYPE.STUDIO ? '/painel' : '/perfil'} className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface border border-white/10">
                   <User size={16} />
                 </div>

@@ -12,7 +12,6 @@ const Register = lazy(() => import('../pages/Register'));
 const RegisterStudio = lazy(() => import('../pages/RegisterStudio'));
 const Dashboard = lazy(() => import('../pages/Dashboard'));
 const Profile = lazy(() => import('../pages/Profile'));
-const Notifications = lazy(() => import('../pages/Notifications'));
 const Streaming = lazy(() => import('../pages/Streaming'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 const Publicar = lazy(() => import('../pages/Publicar'));
@@ -44,7 +43,7 @@ export const router = createBrowserRouter([
         element: <RegisterStudio />,
       },
       {
-        path: '/streaming/:eventId',
+        path: '/streaming/:contentId',
         element: <Streaming />,
       },
       {
@@ -54,10 +53,6 @@ export const router = createBrowserRouter([
           {
             path: '/perfil',
             element: <Profile />,
-          },
-          {
-            path: '/notificacoes',
-            element: <Notifications />,
           },
           {
             path: '/painel',
@@ -74,7 +69,7 @@ export const router = createBrowserRouter([
             element: <Publicar />,
           },
           {
-            path: '/painel/publicar/:eventId',
+            path: '/painel/publicar/:contentId',
             element: <Publicar />,
           },
           {

@@ -41,7 +41,7 @@ export default function Login() {
       }
 
       const role = response?.user?.role;
-      navigate(role === 'STUDIO' ? '/painel' : '/perfil', { replace: true });
+      navigate(role === USER_TYPE.STUDIO ? '/painel' : '/perfil', { replace: true });
     } catch (error) {
       const message = error.response?.data?.message || 'Erro ao iniciar sessão. Verifique as suas credenciais.';
       addNotification(message, 'error');

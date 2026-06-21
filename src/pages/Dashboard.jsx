@@ -3,29 +3,30 @@ import { Link } from 'react-router-dom';
 import { EmptyState } from '../ui/EmptyState';
 import { LayoutDashboard } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { eventsApi } from '../api/events';
+import { contentsApi } from '../api/contents';
 import { useAuth } from '../hooks/useAuth';
 import { NotificationContext } from '../context/NotificationContext';
+import { USER_TYPE } from '../constants/enums';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { addNotification } = useContext(NotificationContext);
 
-  const [events, setEvents] = useState([]);
+  const [contents, setContents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState('');
 
   useEffect(() => {
-    loadEvents();
+    loadContents();
   }, []);
 
-  const loadEvents = async () => {
+  const loadContents = async () => {
     setLoading(true);
     try {
-      const response = await eventsApi.getAll();
-      setEvents(response.data || []);
+      const response = await contentsApi.getAll();
+      setContents(response.data?.contents ?? response.data ?? []);
     } catch (error) {
-      addNotification('Não foi possível carregar eventos.', 'error');
+      addNotification('Não foi possível carregar conteúdos.', 'error');
     } finally {
       setLoading(false);
     }
@@ -35,8 +36,8 @@ export default function Dashboard() {
     if (!confirm('Tem a certeza que pretende eliminar esta publicação?')) return;
     setDeleting(id);
     try {
-      await eventsApi.delete(id);
-      setEvents((prev) => prev.filter((e) => e.id !== id && e._id !== id));
+      await contentsApi.delete(id);
+      setContents((prev) => prev.filter((e) => e.id !== id && e._id !== id));
       addNotification('Publicação removida.', 'success');
     } catch (error) {
       addNotification('Erro ao excluir a publicação.', 'error');
@@ -50,13 +51,13 @@ export default function Dashboard() {
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Painel do Estúdio</h1>
-          <p className="text-sm text-muted mt-2">Gerencie seus eventos e uploads de streaming a partir daqui.</p>
+          <p className="text-sm text-muted mt-2">Gerencie seus conteúdos e uploads de streaming a partir daqui.</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          {user?.role === 'STUDIO' && (
+          {user?.role === USER_TYPE.STUDIO && (
             <>
               <Link to="/painel/publicar">
-                <Button variant="primary">Publicar Evento</Button>
+                <Button variant="primary">Publicar Conteúdo</Button>
               </Link>
               <Link to="/painel/publicar-video">
                 <Button variant="secondary">Upload de Vídeo</Button>
@@ -65,34 +66,34 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-      {user?.role === 'STUDIO' ? (
+      {user?.role === USER_TYPE.STUDIO ? (
         <section className="mb-8">
           <h2 className="mb-4 text-xl font-semibold">As suas publicações</h2>
           {loading ? (
-            <div className="text-sm text-muted">A carregar eventos...</div>
-          ) : events.length === 0 ? (
+            <div className="text-sm text-muted">A carregar conteúdos...</div>
+          ) : contents.length === 0 ? (
             <EmptyState
               icon={LayoutDashboard}
               title="Sem publicações"
-              description="Ainda não publicou eventos. Utilize o botão de Publicar para criar o primeiro."
+              description="Ainda não publicou conteúdos. Utilize o botão de Publicar para criar o primeiro."
             />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {events.map((ev) => {
-                const id = ev.id || ev._id || ev.eventId;
+              {contents.map((content) => {
+                const id = content.id || content._id || content.contentId;
                 return (
                   <div key={id} className="rounded-lg border border-white/5 bg-surface p-4">
                     <div className="mb-3 flex items-start gap-3">
                       <div className="h-20 w-32 overflow-hidden rounded-md bg-white/5">
                         <img
-                          src={ev.posterUrl || ev.poster?.url || `https://via.placeholder.com/320x200?text=${encodeURIComponent(ev.title || 'Sem+imagem')}`}
-                          alt={ev.title}
+                          src={content.coverUrl || content.poster?.url || `https://via.placeholder.com/320x200?text=${encodeURIComponent(content.title || 'Sem+imagem')}`}
+                          alt={content.title}
                           className="h-full w-full object-cover"
                         />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold">{ev.title}</h3>
-                        <p className="text-sm text-muted">{ev.date ? new Date(ev.date).toLocaleString() : 'Data não definida'}</p>
+                        <h3 className="text-lg font-semibold">{content.title}</h3>
+                        <p className="text-sm text-muted">{content.eventDate ? new Date(content.eventDate).toLocaleString() : 'Data não definida'}</p>
                       </div>
                     </div>
 
@@ -115,39 +116,39 @@ export default function Dashboard() {
         </section>
       ) : (
         <section className="mb-8">
-          <h2 className="mb-4 text-xl font-semibold">Eventos disponíveis</h2>
-          <p className="mb-6 text-sm text-muted">Veja abaixo os eventos publicados na plataforma. Pode aceder ao streaming sempre que estiver disponível.</p>
+          <h2 className="mb-4 text-xl font-semibold">Conteúdos disponíveis</h2>
+          <p className="mb-6 text-sm text-muted">Veja abaixo os conteúdos publicados na plataforma. Pode aceder ao streaming sempre que estiver disponível.</p>
           {loading ? (
-            <div className="text-sm text-muted">A carregar eventos...</div>
-          ) : events.length === 0 ? (
+            <div className="text-sm text-muted">A carregar conteúdos...</div>
+          ) : contents.length === 0 ? (
             <EmptyState
               icon={LayoutDashboard}
-              title="Nenhum evento disponível"
-              description="Ainda não há eventos publicados. Verifique novamente mais tarde."
+              title="Nenhum conteúdo disponível"
+              description="Ainda não há conteúdos publicados. Verifique novamente mais tarde."
             />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {events.map((ev) => {
-                const id = ev.id || ev._id || ev.eventId;
-                const isAvailable = new Date() >= new Date(ev.date);
+              {contents.map((content) => {
+                const id = content.id || content._id || content.contentId;
+                const isAvailable = new Date() >= new Date(content.eventDate);
                 return (
                   <div key={id} className="rounded-lg border border-white/5 bg-surface p-4">
                     <div className="mb-3 flex items-start gap-3">
                       <div className="h-20 w-32 overflow-hidden rounded-md bg-white/5">
                         <img
-                          src={ev.posterUrl || ev.poster?.url || `https://via.placeholder.com/320x200?text=${encodeURIComponent(ev.title || 'Sem+imagem')}`}
-                          alt={ev.title}
+                          src={content.coverUrl || content.poster?.url || `https://via.placeholder.com/320x200?text=${encodeURIComponent(content.title || 'Sem+imagem')}`}
+                          alt={content.title}
                           className="h-full w-full object-cover"
                         />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold">{ev.title}</h3>
-                        <p className="text-sm text-muted">{ev.date ? new Date(ev.date).toLocaleString() : 'Data não definida'}</p>
+                        <h3 className="text-lg font-semibold">{content.title}</h3>
+                        <p className="text-sm text-muted">{content.eventDate ? new Date(content.eventDate).toLocaleString() : 'Data não definida'}</p>
                       </div>
                     </div>
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between text-sm text-white/80">
-                        <span>{ev.category}</span>
+                        <span>{content.category}</span>
                       </div>
                       <Link to={`/streaming/${id}`}>
                         <Button className="w-full">{isAvailable ? 'Assistir' : 'Ver detalhes'}</Button>

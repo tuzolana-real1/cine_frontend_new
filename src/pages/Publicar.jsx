@@ -1,7 +1,8 @@
 import { useState, useEffect, useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
-import { eventsApi } from '../api/events';
+import { contentsApi } from '../api/contents';
+import { uploadsApi } from '../api/uploads';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
@@ -19,26 +20,27 @@ const categories = [
 
 const defaultValues = {
   title: '',
-  synopsis: '',
   description: '',
-  date: '',
-  location: '',
+  details: '',
+  eventDate: '',
+  eventLocation: '',
   category: '',
 };
 
 export default function Publicar() {
   const [posterFile, setPosterFile] = useState(null);
   const [posterPreview, setPosterPreview] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingEvent, setIsLoadingEvent] = useState(false);
-  const [pendingEvent, setPendingEvent] = useState(null);
-  const [loadedEvent, setLoadedEvent] = useState(null);
-  const [loadEventId, setLoadEventId] = useState('');
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [pendingContent, setPendingContent] = useState(null);
+  const [loadedContent, setLoadedContent] = useState(null);
+  const [loadContentId, setLoadContentId] = useState('');
 
   const { addNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
-  const { eventId: paramEventId } = useParams();
+  const { contentId: paramContentId } = useParams();
 
   const {
     register,
@@ -53,10 +55,10 @@ export default function Publicar() {
   });
 
   const watchTitle = watch('title');
-  const watchSynopsis = watch('synopsis');
   const watchDescription = watch('description');
-  const watchDate = watch('date');
-  const watchLocation = watch('location');
+  const watchDetails = watch('details');
+  const watchEventDate = watch('eventDate');
+  const watchEventLocation = watch('eventLocation');
   const watchCategory = watch('category');
 
   useEffect(() => {
@@ -68,11 +70,11 @@ export default function Publicar() {
   }, [posterPreview]);
 
   useEffect(() => {
-    if (paramEventId) {
-      setLoadEventId(paramEventId);
-      loadEvent(paramEventId);
+    if (paramContentId) {
+      setLoadContentId(paramContentId);
+      loadContent(paramContentId);
     }
-  }, [paramEventId]);
+  }, [paramContentId]);
 
   const handlePosterChange = (event) => {
     const file = event.target.files?.[0] ?? null;
@@ -87,109 +89,132 @@ export default function Publicar() {
       clearErrors('poster');
     } else {
       setPosterPreview(null);
-      if (!loadedEvent) {
+      if (!loadedContent) {
         setError('poster', { type: 'required', message: 'O cartaz é obrigatório.' });
       }
     }
   };
 
-  const loadEvent = async (id) => {
+  const loadContent = async (id) => {
     if (!id) {
-      addNotification('Insira o ID do evento para carregar.', 'error');
+      addNotification('Insira o ID do conteúdo para carregar.', 'error');
       return;
     }
 
-    setIsLoadingEvent(true);
+    setIsLoadingContent(true);
 
     try {
-      const response = await eventsApi.getById(id);
-      const event = response.data;
-      const posterUrl = event.posterUrl || event.poster?.url || '';
+      const response = await contentsApi.getById(id);
+      const content = response.data;
+      const coverUrl = content.coverUrl || content.poster?.url || '';
 
-      setLoadedEvent(event);
+      setLoadedContent(content);
       reset({
-        title: event.title || '',
-        synopsis: event.synopsis || '',
-        description: event.description || '',
-        date: event.date ? event.date.split('T')[0] : '',
-        location: event.location || '',
-        category: event.category || '',
+        title: content.title || '',
+        description: content.description || '',
+        details: content.details || '',
+        eventDate: content.eventDate ? content.eventDate.split('T')[0] : '',
+        eventLocation: content.eventLocation || '',
+        category: content.category || '',
       });
       setPosterFile(null);
-      setPosterPreview(posterUrl || null);
-      addNotification('Evento carregado para edição.', 'success');
+      setPosterPreview(coverUrl || null);
+      addNotification('Conteúdo carregado para edição.', 'success');
     } catch (error) {
-      const message = error.response?.data?.message || 'Não foi possível carregar o evento. Verifique o ID e tente novamente.';
+      const message = error.response?.data?.message || 'Não foi possível carregar o conteúdo. Verifique o ID e tente novamente.';
       addNotification(message, 'error');
     } finally {
-      setIsLoadingEvent(false);
+      setIsLoadingContent(false);
     }
   };
 
-  const clearLoadedEvent = () => {
-    setLoadedEvent(null);
-    setLoadEventId('');
+  const clearLoadedContent = () => {
+    setLoadedContent(null);
+    setLoadContentId('');
     setPosterFile(null);
     setPosterPreview(null);
     reset(defaultValues);
   };
 
   const onSubmit = (data) => {
-    if (!posterFile && !loadedEvent) {
+    if (!posterFile && !loadedContent) {
       setError('poster', { type: 'required', message: 'O cartaz é obrigatório.' });
       return;
     }
 
-    setPendingEvent(data);
+    setPendingContent(data);
     setIsConfirmationOpen(true);
   };
 
   const handlePublish = async () => {
-    if (!pendingEvent) return;
+    if (!pendingContent) return;
 
     setIsSubmitting(true);
+    setUploadProgress(0);
 
     try {
-      const formData = new FormData();
-      formData.append('title', pendingEvent.title);
-      formData.append('synopsis', pendingEvent.synopsis);
-      formData.append('description', pendingEvent.description);
-      formData.append('date', pendingEvent.date);
-      formData.append('location', pendingEvent.location);
-      formData.append('category', pendingEvent.category);
+      let coverUrl = null;
+
+      // Se houver arquivo de imagem, fazer upload
       if (posterFile) {
-        formData.append('poster', posterFile);
+        const imageForm = new FormData();
+        imageForm.append('file', posterFile);
+        
+        const imageResp = await uploadsApi.uploadImage(imageForm, {
+          onUploadProgress: (evt) => {
+            const percent = Math.round((evt.loaded * 100) / (evt.total || 1));
+            setUploadProgress(percent);
+          },
+        });
+        
+        coverUrl = imageResp.data?.url;
       }
 
-      if (loadedEvent) {
-        await eventsApi.update(loadedEvent.id, formData);
-        addNotification('Evento atualizado com sucesso.', 'success');
+      // Preparar dados do conteúdo
+      const contentData = {
+        title: pendingContent.title,
+        description: pendingContent.description,
+        details: pendingContent.details,
+        eventDate: pendingContent.eventDate,
+        eventLocation: pendingContent.eventLocation,
+        category: pendingContent.category,
+      };
+
+      if (coverUrl) {
+        contentData.coverUrl = coverUrl;
+      }
+
+      // Criar ou atualizar conteúdo (JSON apenas)
+      if (loadedContent) {
+        await contentsApi.update(loadedContent.id, contentData);
+        addNotification('Conteúdo atualizado com sucesso.', 'success');
       } else {
-        await eventsApi.create(formData);
-        addNotification('Evento publicado com sucesso.', 'success');
+        await contentsApi.create(contentData);
+        addNotification('Conteúdo publicado com sucesso.', 'success');
       }
 
       navigate('/painel');
     } catch (error) {
-      const message = error.response?.data?.message || 'Erro ao salvar evento. Tente novamente mais tarde.';
+      const message = error.response?.data?.message || 'Erro ao salvar conteúdo. Tente novamente mais tarde.';
       addNotification(message, 'error');
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
       setIsConfirmationOpen(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!loadedEvent) return;
+    if (!loadedContent) return;
 
     setIsSubmitting(true);
 
     try {
-      await eventsApi.delete(loadedEvent.id);
+      await contentsApi.delete(loadedContent.id);
       addNotification('Publicação removida com sucesso.', 'success');
       navigate('/painel');
     } catch (error) {
-      const message = error.response?.data?.message || 'Erro ao excluir evento. Tente novamente mais tarde.';
+      const message = error.response?.data?.message || 'Erro ao excluir conteúdo. Tente novamente mais tarde.';
       addNotification(message, 'error');
     } finally {
       setIsSubmitting(false);
@@ -201,37 +226,37 @@ export default function Publicar() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">{loadedEvent ? 'Editar Evento' : 'Publicar Evento'}</h1>
+        <h1 className="text-3xl font-bold">{loadedContent ? 'Editar Conteúdo' : 'Publicar Conteúdo'}</h1>
         <p className="text-sm text-muted mt-2 max-w-xl">
-          {loadedEvent
-            ? 'Atualize os detalhes do evento e confirme para salvar as alterações.'
-            : 'Crie um evento, confirme os detalhes e publique-o para que toda a comunidade possa descobrir.'}
+          {loadedContent
+            ? 'Atualize os detalhes do conteúdo e confirme para salvar as alterações.'
+            : 'Crie um conteúdo, confirme os detalhes e publique-o para que toda a comunidade possa descobrir.'}
         </p>
       </div>
 
       <Card className="mb-8 space-y-6">
         <CardHeader className="space-y-3">
           <CardTitle>Editar publicação existente</CardTitle>
-          <p className="text-sm text-muted">Carregue o ID do evento para atualizar ou excluir a publicação.</p>
+          <p className="text-sm text-muted">Carregue o ID do conteúdo para atualizar ou excluir a publicação.</p>
         </CardHeader>
 
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-[1fr_auto] items-end">
             <div>
-              <label className="text-sm font-medium">ID do Evento</label>
+              <label className="text-sm font-medium">ID do Conteúdo</label>
               <input
-                value={loadEventId}
-                onChange={(event) => setLoadEventId(event.target.value)}
-                placeholder="Cole o ID do evento aqui"
+                value={loadContentId}
+                onChange={(event) => setLoadContentId(event.target.value)}
+                placeholder="Cole o ID do conteúdo aqui"
                 className="mt-2 h-11 w-full rounded-md border border-white/10 bg-surface px-3 text-sm text-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button type="button" onClick={() => loadEvent(loadEventId)} isLoading={isLoadingEvent} disabled={!loadEventId}>
+              <Button type="button" onClick={() => loadContent(loadContentId)} isLoading={isLoadingContent} disabled={!loadContentId}>
                 Carregar
               </Button>
-              {loadedEvent && (
-                <Button type="button" variant="secondary" onClick={clearLoadedEvent} disabled={isLoadingEvent}>
+              {loadedContent && (
+                <Button type="button" variant="secondary" onClick={clearLoadedContent} disabled={isLoadingContent}>
                   Nova publicação
                 </Button>
               )}
@@ -243,7 +268,7 @@ export default function Publicar() {
       <div className="grid gap-8 xl:grid-cols-[1.5fr_1fr]">
         <Card className="space-y-6">
           <CardHeader className="space-y-3">
-            <CardTitle>{loadedEvent ? 'Editar Evento' : 'Formulário de Evento'}</CardTitle>
+              <CardTitle>{loadedContent ? 'Editar Conteúdo' : 'Formulário de Conteúdo'}</CardTitle>
             <p className="text-sm text-muted">Preencha todos os campos obrigatórios antes de enviar.</p>
           </CardHeader>
 
@@ -252,7 +277,7 @@ export default function Publicar() {
               <div className="grid gap-4">
                 <Input
                   label="Título"
-                  placeholder="Nome do evento"
+                  placeholder="Nome do conteúdo"
                   error={errors.title?.message}
                   {...register('title', {
                     required: 'O título é obrigatório.',
@@ -264,27 +289,27 @@ export default function Publicar() {
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium">Sinopse</label>
                     <textarea
-                      className={`min-h-[84px] w-full rounded-md border px-3 py-2 text-sm text-text transition-colors bg-surface border-white/10 placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${errors.synopsis ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                      placeholder="Uma breve descrição do evento"
-                      {...register('synopsis', {
+                      className={`min-h-[84px] w-full rounded-md border px-3 py-2 text-sm text-text transition-colors bg-surface border-white/10 placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${errors.description ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                      placeholder="Uma breve descrição do conteúdo"
+                      {...register('description', {
                         required: 'A sinopse é obrigatória.',
                         minLength: { value: 10, message: 'Use pelo menos 10 caracteres.' },
                       })}
                     />
-                    {errors.synopsis && <span className="text-xs text-red-500">{errors.synopsis.message}</span>}
+                    {errors.description && <span className="text-xs text-red-500">{errors.description.message}</span>}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium">Descrição</label>
                     <textarea
-                      className={`min-h-[84px] w-full rounded-md border px-3 py-2 text-sm text-text transition-colors bg-surface border-white/10 placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${errors.description ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                      placeholder="Detalhes completos do evento"
-                      {...register('description', {
+                      className={`min-h-[84px] w-full rounded-md border px-3 py-2 text-sm text-text transition-colors bg-surface border-white/10 placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${errors.details ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                      placeholder="Detalhes completos do conteúdo"
+                      {...register('details', {
                         required: 'A descrição é obrigatória.',
                         minLength: { value: 20, message: 'Use pelo menos 20 caracteres.' },
                       })}
                     />
-                    {errors.description && <span className="text-xs text-red-500">{errors.description.message}</span>}
+                    {errors.details && <span className="text-xs text-red-500">{errors.details.message}</span>}
                   </div>
                 </div>
 
@@ -292,8 +317,8 @@ export default function Publicar() {
                   <Input
                     label="Data"
                     type="date"
-                    error={errors.date?.message}
-                    {...register('date', {
+                    error={errors.eventDate?.message}
+                    {...register('eventDate', {
                       required: 'A data é obrigatória.',
                     })}
                   />
@@ -301,8 +326,8 @@ export default function Publicar() {
                   <Input
                     label="Local"
                     placeholder="Rua, bairro, cidade"
-                    error={errors.location?.message}
-                    {...register('location', {
+                    error={errors.eventLocation?.message}
+                    {...register('eventLocation', {
                       required: 'O local é obrigatório.',
                       minLength: { value: 5, message: 'Insira um local válido.' },
                     })}
@@ -340,13 +365,13 @@ export default function Publicar() {
               </div>
 
               <div className="flex flex-col gap-3">
-                {loadedEvent && (
+                {loadedContent && (
                   <Button variant="outline" type="button" onClick={handleDelete} isLoading={isSubmitting}>
                     Excluir Publicação
                   </Button>
                 )}
                 <Button type="submit" className="w-full" isLoading={isSubmitting}>
-                  {loadedEvent ? 'Salvar Alterações' : 'Verificar e Publicar'}
+                  {loadedContent ? 'Salvar Alterações' : 'Verificar e Publicar'}
                 </Button>
               </div>
             </form>
@@ -356,7 +381,7 @@ export default function Publicar() {
         <Card className="space-y-6">
           <CardHeader className="space-y-3">
             <CardTitle>Pré-visualização</CardTitle>
-            <p className="text-sm text-muted">Confira o visual do evento antes de publicar.</p>
+            <p className="text-sm text-muted">Confira o visual do conteúdo antes de publicar.</p>
           </CardHeader>
 
           <CardContent className="space-y-4">
@@ -370,7 +395,7 @@ export default function Publicar() {
                   />
                 ) : (
                   <div className="flex h-64 items-center justify-center rounded-3xl bg-white/5 text-sm text-muted">
-                    Cartaz do evento
+                    Cartaz do conteúdo
                   </div>
                 )}
               </div>
@@ -380,16 +405,16 @@ export default function Publicar() {
                   <span className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">{selectedCategoryLabel}</span>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-semibold">{watchTitle || 'Título do evento'}</h2>
-                  <p className="text-sm text-muted mt-1">{watchSynopsis || 'Sinopse breve do evento aparecerá aqui.'}</p>
+                  <h2 className="text-2xl font-semibold">{watchTitle || 'Título do conteúdo'}</h2>
+                  <p className="text-sm text-muted mt-1">{watchDescription || 'Sinopse breve do conteúdo aparecerá aqui.'}</p>
                 </div>
                 <div className="grid gap-2 text-sm text-muted">
-                  <p><strong className="text-text">Data:</strong> {watchDate || 'dd/mm/aaaa'}</p>
-                  <p><strong className="text-text">Local:</strong> {watchLocation || 'Endereço do evento'}</p>
+                  <p><strong className="text-text">Data:</strong> {watchEventDate || 'dd/mm/aaaa'}</p>
+                  <p><strong className="text-text">Local:</strong> {watchEventLocation || 'Endereço do conteúdo'}</p>
                 </div>
                 <div>
                   <h3 className="text-base font-semibold">Descrição</h3>
-                  <p className="text-sm text-muted">{watchDescription || 'A descrição completa do evento aparecerá aqui para dar mais contexto aos interessados.'}</p>
+                  <p className="text-sm text-muted">{watchDetails || 'A descrição completa do conteúdo aparecerá aqui para dar mais contexto aos interessados.'}</p>
                 </div>
               </div>
             </div>
@@ -399,34 +424,34 @@ export default function Publicar() {
 
       <Modal isOpen={isConfirmationOpen} onClose={() => setIsConfirmationOpen(false)} title="Confirmar publicação">
         <div className="space-y-4 text-sm text-text">
-          <p>Reveja os detalhes do evento antes de enviar. Quando confirmar, o evento será publicado imediatamente.</p>
+          <p>Reveja os detalhes do conteúdo antes de enviar. Quando confirmar, o conteúdo será publicado imediatamente.</p>
 
           <div className="space-y-3 rounded-2xl border border-white/10 bg-surface p-4">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-muted">Título</p>
-              <p className="mt-1 text-base font-semibold">{pendingEvent?.title}</p>
+              <p className="mt-1 text-base font-semibold">{pendingContent?.title}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-muted">Categoria</p>
-              <p className="mt-1 text-base">{categories.find((item) => item.value === pendingEvent?.category)?.label || '-'}</p>
+              <p className="mt-1 text-base">{categories.find((item) => item.value === pendingContent?.category)?.label || '-'}</p>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-muted">Data</p>
-                <p className="mt-1">{pendingEvent?.date}</p>
+                <p className="mt-1">{pendingContent?.eventDate}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-muted">Local</p>
-                <p className="mt-1">{pendingEvent?.location}</p>
+                <p className="mt-1">{pendingContent?.eventLocation}</p>
               </div>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-muted">Sinopse</p>
-              <p className="mt-1 text-sm text-muted">{pendingEvent?.synopsis}</p>
+              <p className="mt-1 text-sm text-muted">{pendingContent?.description}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-muted">Descrição</p>
-              <p className="mt-1 text-sm text-muted">{pendingEvent?.description}</p>
+              <p className="mt-1 text-sm text-muted">{pendingContent?.details}</p>
             </div>
           </div>
         </div>

@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState, useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, Video } from 'lucide-react';
+import { ArrowLeft, Upload } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Modal } from '../ui/Modal';
 import { NotificationContext } from '../context/NotificationContext';
-import { eventsApi } from '../api/events';
+import { contentsApi } from '../api/contents';
+import { uploadsApi } from '../api/uploads';
 
 function formatDateLabel(value) {
   if (!value) return 'Data não definida';
@@ -40,7 +41,7 @@ export default function PublicarVideo() {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      eventId: '',
+      contentId: '',
       eventDate: '',
     },
   });
@@ -106,22 +107,38 @@ export default function PublicarVideo() {
   };
 
   const handleUpload = async () => {
+    // New flow: upload image and video to external service, obtain URLs,
+    // then update the Content via contentsApi.update with URLs only.
     if (!pendingData) return;
     setIsSubmitting(true);
 
-    const formData = new FormData();
-    formData.append('poster', posterFile);
-    formData.append('video', videoFile);
-
     try {
-      await eventsApi.uploadVideo(pendingData.eventId, formData, {
+      // Simulate external upload calls using uploadsApi (which still uses multipart)
+      // In real flow, integrate Cloudinary / external provider here and obtain URLs.
+      const imageForm = new FormData();
+      imageForm.append('file', posterFile);
+      const imageResp = await uploadsApi.uploadImage(imageForm, {
         onUploadProgress: (progressEvent) => {
           const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
-          setUploadProgress(percent);
+          setUploadProgress(percent / 2);
         },
       });
+      const imageUrl = imageResp.data?.url;
 
-      addNotification('Mídia carregada com sucesso.', 'success');
+      const videoForm = new FormData();
+      videoForm.append('file', videoFile);
+      const videoResp = await uploadsApi.uploadVideo(videoForm, {
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+          setUploadProgress(50 + (percent / 2));
+        },
+      });
+      const videoUrl = videoResp.data?.url;
+
+      // Update content with obtained URLs only
+      await contentsApi.update(pendingData.contentId, { coverUrl: imageUrl, videoUrl });
+
+      addNotification('Mídia carregada e conteúdo atualizado.', 'success');
       setIsConfirmationOpen(false);
       navigate('/painel');
     } catch (error) {
@@ -137,11 +154,11 @@ export default function PublicarVideo() {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Upload de Vídeo do Evento</h1>
-          <p className="text-sm text-muted mt-2 max-w-2xl">Faça upload do cartaz PNG e do vídeo MP4 via Cloudinary e atualize o evento existente.</p>
+          <h1 className="text-3xl font-bold">Upload de Vídeo do Conteúdo</h1>
+          <p className="text-sm text-muted mt-2 max-w-2xl">Faça upload do cartaz PNG e do vídeo MP4 via Cloudinary e atualize o conteúdo existente.</p>
         </div>
         <Link to="/painel/publicar" className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-surface px-4 py-2 text-sm text-text hover:bg-white/5 transition-colors">
-          <ArrowLeft size={16} /> Voltar ao formulário de evento
+          <ArrowLeft size={16} /> Voltar ao formulário de conteúdo
         </Link>
       </div>
 
@@ -149,26 +166,26 @@ export default function PublicarVideo() {
         <Card className="space-y-6">
           <CardHeader className="space-y-3">
             <CardTitle>Dados de Upload</CardTitle>
-            <p className="text-sm text-muted">Informe o ID do evento e selecione os ficheiros válidos.</p>
+            <p className="text-sm text-muted">Informe o ID do conteúdo e selecione os ficheiros válidos.</p>
           </CardHeader>
 
           <CardContent>
             <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
               <Input
-                label="ID do Evento"
+                label="ID do Conteúdo"
                 placeholder="123456"
-                error={errors.eventId?.message}
-                {...register('eventId', {
-                  required: 'O ID do evento é obrigatório.',
+                error={errors.contentId?.message}
+                {...register('contentId', {
+                  required: 'O ID do conteúdo é obrigatório.',
                 })}
               />
 
               <Input
-                label="Data do Evento"
+                label="Data do Conteúdo"
                 type="date"
                 error={errors.eventDate?.message}
                 {...register('eventDate', {
-                  required: 'A data do evento é obrigatória.',
+                  required: 'A data do conteúdo é obrigatória.',
                 })}
               />
 
@@ -213,7 +230,7 @@ export default function PublicarVideo() {
             <div className="space-y-3 rounded-3xl border border-white/10 bg-background p-4">
               <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-surface px-4 py-3">
                 <div>
-                  <p className="text-sm text-muted">Data do evento</p>
+                  <p className="text-sm text-muted">Data do conteúdo</p>
                   <p className="text-base font-semibold">{formatDateLabel(watchEventDate)}</p>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isStreamAvailable ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-300'}`}>
@@ -274,12 +291,12 @@ export default function PublicarVideo() {
 
       <Modal isOpen={isConfirmationOpen} onClose={() => setIsConfirmationOpen(false)} title="Confirmar upload">
         <div className="space-y-4 text-sm text-text">
-          <p>Confirme o upload dos ficheiros para o evento especificado. Esta ação enviará o PNG e o MP4 via Cloudinary para o backend.</p>
+          <p>Confirme o upload dos ficheiros para o conteúdo especificado. Esta ação enviará o PNG e o MP4 via Cloudinary para o backend.</p>
 
           <div className="rounded-2xl border border-white/10 bg-surface p-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-muted">Evento</p>
-            <p className="mt-1 text-base font-semibold">{pendingData?.eventId}</p>
-            <p className="mt-1 text-sm text-muted">Data do evento: {formatDateLabel(pendingData?.eventDate)}</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-muted">Conteúdo</p>
+            <p className="mt-1 text-base font-semibold">{pendingData?.contentId}</p>
+            <p className="mt-1 text-sm text-muted">Data do conteúdo: {formatDateLabel(pendingData?.eventDate)}</p>
             <p className="mt-2 text-sm">Cartaz: {posterFile?.name ?? 'Nenhum'}</p>
             <p className="text-sm">Vídeo: {videoFile?.name ?? 'Nenhum'}</p>
           </div>

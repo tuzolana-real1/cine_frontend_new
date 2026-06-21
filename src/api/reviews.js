@@ -1,7 +1,8 @@
 import api from './axios';
 
 export const reviewsApi = {
-  getByEventId: (eventId) => api.get(`/events/${eventId}/reviews`),
-  create: (eventId, data) => api.post(`/events/${eventId}/reviews`, data),
+  // Reviews now belong to contents (Content -> reviews[])
+  getByContentId: (contentId) => api.get(`/contents/${contentId}/reviews`),
+  create: (contentId, data) => api.post(`/contents/${contentId}/reviews`, data),
   delete: (reviewId) => api.delete(`/reviews/${reviewId}`),
 };

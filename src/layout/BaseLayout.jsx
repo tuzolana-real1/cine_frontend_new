@@ -3,7 +3,6 @@ import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { Sidebar } from './Sidebar';
-import { ToastContainer } from '../ui/Toast';
 import { OfflineBanner } from '../ui/OfflineBanner';
 
 export const BaseLayout = () => {
@@ -24,7 +23,7 @@ export const BaseLayout = () => {
       </main>
       
       <Footer />
-      <ToastContainer />
+      {/* Toasts removed: notifications disabled */}
     </div>
   );
 };

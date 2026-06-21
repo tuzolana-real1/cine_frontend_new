@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { X, Home, Compass, User, LayoutDashboard, LogOut } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { cn } from '../ui/Button';
+import { USER_TYPE } from '../constants/enums';
 
 export const Sidebar = ({ isOpen, onClose }) => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -42,14 +43,14 @@ export const Sidebar = ({ isOpen, onClose }) => {
             {isAuthenticated && (
               <>
                 <div className="my-4 border-t border-white/10" />
-                <Link to={user?.role === 'STUDIO' ? '/painel' : '/perfil'} onClick={onClose} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white">
-                  {user?.role === 'STUDIO' ? <LayoutDashboard size={20} /> : <User size={20} />}
-                  {user?.role === 'STUDIO' ? 'Painel' : 'Perfil'}
+                <Link to={user?.role === USER_TYPE.STUDIO ? '/painel' : '/perfil'} onClick={onClose} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white">
+                  {user?.role === USER_TYPE.STUDIO ? <LayoutDashboard size={20} /> : <User size={20} />}
+                  {user?.role === USER_TYPE.STUDIO ? 'Painel' : 'Perfil'}
                 </Link>
-                {user?.role === 'STUDIO' && (
+                {user?.role === USER_TYPE.STUDIO && (
                   <>
                     <Link to="/painel/publicar" onClick={onClose} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white">
-                      <LayoutDashboard size={20} /> Publicar Evento
+                      <LayoutDashboard size={20} /> Publicar Conteúdo
                     </Link>
                     <Link to="/painel/publicar-video" onClick={onClose} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white">
                       <LayoutDashboard size={20} /> Upload de Vídeo

@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { USER_TYPE } from '../constants/enums';
 
 export const StudioRoute = () => {
   const { user, loading } = useAuth();
@@ -12,7 +13,7 @@ export const StudioRoute = () => {
     );
   }
 
-  if (user?.role !== 'STUDIO') {
+  if (user?.role !== USER_TYPE.STUDIO) {
     return <Navigate to="/" replace />;
   }
 

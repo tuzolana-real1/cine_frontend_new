@@ -4,7 +4,7 @@ import { reviewsApi } from '../api/reviews';
 import { Button } from './Button';
 import { NotificationContext } from '../context/NotificationContext';
 
-export const CommentSection = ({ eventId }) => {
+export const CommentSection = ({ contentId }) => {
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,7 +25,7 @@ export const CommentSection = ({ eventId }) => {
   useEffect(() => {
     const loadReviews = async () => {
       try {
-        const response = await reviewsApi.getByEventId(eventId);
+        const response = await reviewsApi.getByContentId(contentId);
         setReviews(response.data || []);
       } catch (error) {
         addNotification('Não foi possível carregar avaliações.', 'error');
@@ -35,7 +35,7 @@ export const CommentSection = ({ eventId }) => {
     };
 
     loadReviews();
-  }, [eventId, addNotification]);
+  }, [contentId, addNotification]);
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -45,7 +45,7 @@ export const CommentSection = ({ eventId }) => {
         comment: data.comment?.trim() || '',
       };
 
-      const response = await reviewsApi.create(eventId, reviewData);
+      const response = await reviewsApi.create(contentId, reviewData);
       setReviews((prev) => [response.data, ...prev]);
       reset({ rating: '5', comment: '' });
       addNotification('Comentário enviado com sucesso.', 'success');
@@ -85,7 +85,7 @@ export const CommentSection = ({ eventId }) => {
             <label className="text-sm font-medium">Comentário</label>
             <textarea
               className={`min-h-[84px] w-full rounded-md border border-white/10 bg-background px-3 py-2 text-sm text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${errors.comment ? 'border-red-500' : ''}`}
-              placeholder="Partilhe a sua opinião sobre o evento"
+              placeholder="Partilhe a sua opinião sobre o conteúdo"
               {...register('comment', {
                 required: 'O comentário é obrigatório.',
                 minLength: { value: 10, message: 'Escreva pelo menos 10 caracteres.' },
@@ -106,7 +106,7 @@ export const CommentSection = ({ eventId }) => {
         {isLoading ? (
           <div className="rounded-3xl border border-dashed border-white/10 bg-background p-6 text-center text-sm text-muted">Carregando avaliações...</div>
         ) : reviews.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-white/10 bg-background p-6 text-center text-sm text-muted">Seja o primeiro a avaliar este evento.</div>
+          <div className="rounded-3xl border border-dashed border-white/10 bg-background p-6 text-center text-sm text-muted">Seja o primeiro a avaliar este conteúdo.</div>
         ) : (
           reviews.map((review) => (
             <div key={review.id} className="rounded-3xl border border-white/10 bg-background p-4">

@@ -1,4 +1,5 @@
 import api from './axios';
+import { USER_TYPE } from '../constants/enums';
 
 const mockUsers = {
   admin: {
@@ -7,7 +8,7 @@ const mockUsers = {
       id: 'admin',
       name: 'Administrador Comum',
       email: 'admin@local',
-      role: 'USER',
+      role: USER_TYPE.VIEWER,
     },
   },
   root: {
@@ -16,7 +17,7 @@ const mockUsers = {
       id: 'root',
       name: 'Estúdio Root',
       email: 'root@local',
-      role: 'STUDIO',
+      role: USER_TYPE.STUDIO,
     },
   },
 };

@@ -48,7 +48,7 @@ export default function RegisterStudio() {
         <CardHeader className="text-center">
           <span className="mb-2 mx-auto inline-block rounded-full bg-primary/20 px-3 py-1 text-xs font-semibold text-primary">Conta Estúdio</span>
           <CardTitle>Registo de Produtor/Estúdio</CardTitle>
-          <p className="text-sm text-muted mt-2">Publique os seus eventos e conteúdos na plataforma.</p>
+          <p className="text-sm text-muted mt-2">Publique os seus conteúdos na plataforma.</p>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
