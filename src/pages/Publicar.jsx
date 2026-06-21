@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { contentsApi } from '../api/contents';
@@ -7,7 +7,6 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Modal } from '../ui/Modal';
-import { NotificationContext } from '../context/NotificationContext';
 
 const categories = [
   { value: 'musica', label: 'Música' },
@@ -38,7 +37,6 @@ export default function Publicar() {
   const [loadedContent, setLoadedContent] = useState(null);
   const [loadContentId, setLoadContentId] = useState('');
 
-  const { addNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
   const { contentId: paramContentId } = useParams();
 
@@ -97,7 +95,6 @@ export default function Publicar() {
 
   const loadContent = async (id) => {
     if (!id) {
-      addNotification('Insira o ID do conteúdo para carregar.', 'error');
       return;
     }
 
@@ -119,10 +116,8 @@ export default function Publicar() {
       });
       setPosterFile(null);
       setPosterPreview(coverUrl || null);
-      addNotification('Conteúdo carregado para edição.', 'success');
     } catch (error) {
-      const message = error.response?.data?.message || 'Não foi possível carregar o conteúdo. Verifique o ID e tente novamente.';
-      addNotification(message, 'error');
+      console.error('Não foi possível carregar o conteúdo.', error);
     } finally {
       setIsLoadingContent(false);
     }
@@ -187,16 +182,13 @@ export default function Publicar() {
       // Criar ou atualizar conteúdo (JSON apenas)
       if (loadedContent) {
         await contentsApi.update(loadedContent.id, contentData);
-        addNotification('Conteúdo atualizado com sucesso.', 'success');
       } else {
         await contentsApi.create(contentData);
-        addNotification('Conteúdo publicado com sucesso.', 'success');
       }
 
       navigate('/painel');
     } catch (error) {
-      const message = error.response?.data?.message || 'Erro ao salvar conteúdo. Tente novamente mais tarde.';
-      addNotification(message, 'error');
+      console.error('Erro ao salvar conteúdo.', error);
     } finally {
       setIsSubmitting(false);
       setUploadProgress(0);
@@ -211,11 +203,9 @@ export default function Publicar() {
 
     try {
       await contentsApi.delete(loadedContent.id);
-      addNotification('Publicação removida com sucesso.', 'success');
       navigate('/painel');
     } catch (error) {
-      const message = error.response?.data?.message || 'Erro ao excluir conteúdo. Tente novamente mais tarde.';
-      addNotification(message, 'error');
+      console.error('Erro ao excluir conteúdo.', error);
     } finally {
       setIsSubmitting(false);
     }

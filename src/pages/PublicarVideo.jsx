@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useContext } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Upload } from 'lucide-react';
@@ -6,7 +6,6 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Modal } from '../ui/Modal';
-import { NotificationContext } from '../context/NotificationContext';
 import { contentsApi } from '../api/contents';
 import { uploadsApi } from '../api/uploads';
 
@@ -29,7 +28,6 @@ export default function PublicarVideo() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [pendingData, setPendingData] = useState(null);
 
-  const { addNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
 
   const {
@@ -138,12 +136,10 @@ export default function PublicarVideo() {
       // Update content with obtained URLs only
       await contentsApi.update(pendingData.contentId, { coverUrl: imageUrl, videoUrl });
 
-      addNotification('Mídia carregada e conteúdo atualizado.', 'success');
       setIsConfirmationOpen(false);
       navigate('/painel');
     } catch (error) {
-      const message = error.response?.data?.message || 'Erro ao carregar mídia. Tente novamente.';
-      addNotification(message, 'error');
+      console.error('Erro ao carregar mídia.', error);
     } finally {
       setIsSubmitting(false);
       setUploadProgress(0);

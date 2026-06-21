@@ -1,16 +1,14 @@
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useAuth } from '../hooks/useAuth';
-import { NotificationContext } from '../context/NotificationContext';
 
 export default function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register: registerUser } = useAuth();
-  const { addNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
 
   const {
@@ -38,11 +36,9 @@ export default function Register() {
         password: data.password,
       };
       await registerUser(payload);
-      addNotification('Conta criada com sucesso! Bem-vindo.', 'success');
       navigate('/painel');
     } catch (error) {
-      const message = error.response?.data?.message || 'Erro ao criar conta. Tente novamente mais tarde.';
-      addNotification(message, 'error');
+      console.error('Erro ao criar conta.', error);
     } finally {
       setIsSubmitting(false);
     }

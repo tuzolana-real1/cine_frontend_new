@@ -1,14 +1,12 @@
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { reviewsApi } from '../api/reviews';
 import { Button } from './Button';
-import { NotificationContext } from '../context/NotificationContext';
 
 export const CommentSection = ({ contentId }) => {
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addNotification } = useContext(NotificationContext);
 
   const {
     register,
@@ -28,14 +26,14 @@ export const CommentSection = ({ contentId }) => {
         const response = await reviewsApi.getByContentId(contentId);
         setReviews(response.data || []);
       } catch (error) {
-        addNotification('Não foi possível carregar avaliações.', 'error');
+        console.error('Não foi possível carregar avaliações.', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadReviews();
-  }, [contentId, addNotification]);
+  }, [contentId]);
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
@@ -48,9 +46,8 @@ export const CommentSection = ({ contentId }) => {
       const response = await reviewsApi.create(contentId, reviewData);
       setReviews((prev) => [response.data, ...prev]);
       reset({ rating: '5', comment: '' });
-      addNotification('Comentário enviado com sucesso.', 'success');
     } catch (error) {
-      addNotification('Erro ao enviar comentário.', 'error');
+      console.error('Erro ao enviar comentário.', error);
     } finally {
       setIsSubmitting(false);
     }

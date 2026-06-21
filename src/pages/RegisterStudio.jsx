@@ -1,16 +1,14 @@
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useAuth } from '../hooks/useAuth';
-import { NotificationContext } from '../context/NotificationContext';
 
 export default function RegisterStudio() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { registerStudio } = useAuth();
-  const { addNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
 
   const {
@@ -31,12 +29,10 @@ export default function RegisterStudio() {
     setIsSubmitting(true);
     try {
       await registerStudio(data);
-      addNotification('Estúdio registado com sucesso!', 'success');
       // Redirecionar para o painel de estúdio
       navigate('/painel');
     } catch (error) {
-      const message = error.response?.data?.message || 'Erro ao registar estúdio. Tente novamente mais tarde.';
-      addNotification(message, 'error');
+      console.error('Erro ao registar estúdio.', error);
     } finally {
       setIsSubmitting(false);
     }

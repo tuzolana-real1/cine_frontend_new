@@ -1,16 +1,14 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { EmptyState } from '../ui/EmptyState';
 import { LayoutDashboard } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { contentsApi } from '../api/contents';
 import { useAuth } from '../hooks/useAuth';
-import { NotificationContext } from '../context/NotificationContext';
 import { USER_TYPE } from '../constants/enums';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { addNotification } = useContext(NotificationContext);
 
   const [contents, setContents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -26,7 +24,7 @@ export default function Dashboard() {
       const response = await contentsApi.getAll();
       setContents(response.data?.contents ?? response.data ?? []);
     } catch (error) {
-      addNotification('Não foi possível carregar conteúdos.', 'error');
+      console.error('Não foi possível carregar conteúdos.', error);
     } finally {
       setLoading(false);
     }
@@ -38,9 +36,8 @@ export default function Dashboard() {
     try {
       await contentsApi.delete(id);
       setContents((prev) => prev.filter((e) => e.id !== id && e._id !== id));
-      addNotification('Publicação removida.', 'success');
     } catch (error) {
-      addNotification('Erro ao excluir a publicação.', 'error');
+      console.error('Erro ao excluir a publicação.', error);
     } finally {
       setDeleting('');
     }

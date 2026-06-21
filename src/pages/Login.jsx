@@ -1,16 +1,15 @@
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useAuth } from '../hooks/useAuth';
-import { NotificationContext } from '../context/NotificationContext';
+import { USER_TYPE } from '../constants/enums';
 
 export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
-  const { addNotification } = useContext(NotificationContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -33,8 +32,6 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       const response = await login(data);
-      addNotification('Sessão iniciada com sucesso!', 'success');
-      
       if (from) {
         navigate(from, { replace: true });
         return;
@@ -43,8 +40,7 @@ export default function Login() {
       const role = response?.user?.role;
       navigate(role === USER_TYPE.STUDIO ? '/painel' : '/perfil', { replace: true });
     } catch (error) {
-      const message = error.response?.data?.message || 'Erro ao iniciar sessão. Verifique as suas credenciais.';
-      addNotification(message, 'error');
+      console.error('Erro ao iniciar sessão.', error);
     } finally {
       setIsSubmitting(false);
     }
